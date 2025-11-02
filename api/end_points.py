@@ -13,12 +13,12 @@ router = APIRouter()
 # Load models and vector store once
 embed_model = load_embed()
 llm = load_llm()
-vector_store = get_vector_store("Departments")
+vector_store = get_vector_store("FoodDB")
 reranker = build_flag_reranker(model_id="AITeamVN/Vietnamese_Reranker", top_n=3)
 
-class QuestionRequest(BaseModel):
+class NutritionRequest(BaseModel):
     question: str
-    department_id: int
+    department_id: dict | None 
 
 
 class ChatMessageResponse(BaseModel):
@@ -27,7 +27,7 @@ class ChatMessageResponse(BaseModel):
 
 
 @router.post("/ask", response_model=ChatMessageResponse)
-async def ask_question(req: QuestionRequest):
+async def ask_nutrition(req: NutritionRequest):
     response_text, source_docs = routing(
         query_str=req.question,
         user_department_id=req.department_id,
@@ -40,4 +40,4 @@ async def ask_question(req: QuestionRequest):
     return ChatMessageResponse(
         answer=response_text,
         sourceDocuments=source_docs,
-    )
+    )   
