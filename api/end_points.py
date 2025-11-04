@@ -2,9 +2,9 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import List
 
-from config.embed import load_embed
-from config.llm import load_llm
-from config.vector_store import get_vector_store
+from config import load_embed
+from config import load_llm
+from config import get_vector_store
 from router.router import routing
 from post_processor.reranker import build_flag_reranker
 
