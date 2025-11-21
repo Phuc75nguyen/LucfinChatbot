@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from api import router as ask_router
+from api.end_points import router as ask_router
 
 app = FastAPI(
     title="RAG Lucfin QA",
