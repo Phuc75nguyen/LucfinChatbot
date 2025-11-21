@@ -1,7 +1,7 @@
 from llama_index.core.llms import ChatMessage
 from llama_index.core.base.response.schema import Response
 from retriever.custom_retriever import ChromaDBRetriever, FusionRetriever
-from retriever.custom_query_engine import DepartmentAwareQueryEngine
+from retriever.custom_query_engine import NutritionQueryEngine
 from llama_index.core import QueryBundle
 from llama_index.core.storage.docstore import SimpleDocumentStore
 from llama_index.retrievers.bm25 import BM25Retriever
@@ -30,17 +30,16 @@ def handle_chitchat(query: str, llm) -> str:
     response = llm.chat(messages)
     return Response(response= "CHITCHAT :" + response.message.content.strip(), metadata={"doc_ids": None})
 
-def handle_departments_req(vector_store, embed_model, user_department_id, llm, reranker, query_str: str):
+def handle_nutrition_req(vector_store, embed_model, llm, reranker, query_str: str):
 
     vector_retriever = ChromaDBRetriever(vector_store=vector_store, embed_model=embed_model, similarity_top_k= 10)
     bm25_retriever = load_bm25_retriever(vector_store)
     retriever = FusionRetriever(
     llm, [vector_retriever, bm25_retriever],embed_model, similarity_top_k=20
 )
-    custom_query_engine = DepartmentAwareQueryEngine(
+    custom_query_engine = NutritionQueryEngine(
         retriever=retriever,
         llm=llm,
-        user_department_id= user_department_id,
         reranker= reranker
     )
     # query_str = "lịch học skill writing ở tuần 1 thế nào?"

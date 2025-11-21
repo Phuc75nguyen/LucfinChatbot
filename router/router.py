@@ -26,7 +26,7 @@ def route_query(
 
     return parsed
 
-def route_by_choice(choices: List[int], query_str:str, user_department_id:int, vector_store, embed_model, llm, reranker):
+def route_by_choice(choices: List[int], query_str:str, vector_store, embed_model, llm, reranker):
     if not choices:
         return Response(response="Không có lựa chọn nào được xác định.",
                 metadata={"doc_ids": None})
@@ -34,22 +34,22 @@ def route_by_choice(choices: List[int], query_str:str, user_department_id:int, v
     if len(choices) == 1:
         choice = choices[0]
         if choice == 1:
-            return handle_departments_req(vector_store, embed_model, user_department_id, llm, reranker, query_str)
+            return handle_nutrition_req(vector_store, embed_model, llm, reranker, query_str)
         elif choice == 2:
             return handle_chitchat(query=query_str, llm = llm)
         else:
             return Response(response=f"Lựa chọn không được hỗ trợ: {choice}",
                             metadata={"doc_ids": None})
     elif len(choices) == 2:
-            return handle_departments_req(vector_store, embed_model, user_department_id, llm, reranker, query_str)
+            return handle_nutrition_req(vector_store, embed_model, llm, reranker, query_str)
     else:
         return Response(response=f"Trường hợp không xử lý: nhiều hơn 2 lựa chọn ({choices})",
                         metadata={"doc_ids": None})
 
-def routing(query_str:str,  user_department_id:int, vector_store: ChromaVectorStore, embed_model, llm, reranker):
+def routing(query_str:str, vector_store: ChromaVectorStore, embed_model, llm, reranker):
     output_parser = CustomOutputParser(AnswerRouter)
     llm_choices = route_query(query_str, choices_router, output_parser, llm)
 
     extracted_choices = extract_choices(llm_choices)
-    raw_answer = route_by_choice(extracted_choices, query_str, user_department_id, vector_store, embed_model, llm, reranker)
+    raw_answer = route_by_choice(extracted_choices, query_str, vector_store, embed_model, llm, reranker)
     return extract_answer(raw_answer)

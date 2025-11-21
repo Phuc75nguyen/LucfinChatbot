@@ -17,5 +17,4 @@ faiss-cpu
 openai
 tiktoken
 uvicorn
-
 git+https://github.com/FlagOpen/FlagEmbedding.git

@@ -2,8 +2,8 @@ from llama_index.core import PromptTemplate
 
 #ROUTER
 choices_router = [
-    "DEPARTMENT_QUERY: Loại câu hỏi này liên quan đến một phòng ban cụ thể trong công ty. Thường đề cập đến chính sách, quy trình, nhân sự hoặc công việc của các phòng như Nhân sự, Kỹ thuật, Kinh doanh, Tài chính... Trả lời yêu cầu truy xuất tài liệu nội bộ của phòng ban tương ứng. Ngoài ra có phòng ban it helper, chuyên xử lý các vấn đề liên quan đến mạng hay các ứng dụng hay được dùng trong công ty, và có phòng ban xử lý liên quan đến ielts",
-    "CHITCHAT_OR_GENERAL: Loại câu hỏi này mang tính trò chuyện (chitchat) hoặc kiến thức chung, không liên quan đến bất kỳ phòng ban cụ thể nào. Bao gồm lời chào hỏi, câu hỏi về AI, kiến thức xã hội, giải trí hoặc các câu hỏi mở",
+    "NUTRITION_QUERY: Loại câu hỏi này liên quan đến kiến thức về dinh dưỡng, thực phẩm, chế độ ăn uống, sức khỏe. Trả lời yêu cầu truy xuất tài liệu về dinh dưỡng.",
+    "CHITCHAT_OR_GENERAL: Loại câu hỏi này mang tính trò chuyện (chitchat) hoặc kiến thức chung, không liên quan đến dinh dưỡng. Bao gồm lời chào hỏi, câu hỏi về AI, kiến thức xã hội, giải trí hoặc các câu hỏi mở",
 ]
 
 router_prompt0 = PromptTemplate(

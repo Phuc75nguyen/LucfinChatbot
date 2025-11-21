@@ -1,9 +1,9 @@
 from fastapi import FastAPI
-from api.end_points import router as ask_router
+from api import router as ask_router
 
 app = FastAPI(
     title="RAG Lucfin QA",
-    description="API truy vấn tài liệu dinh dưỡng nội bộ, có router thông minh",
+    description="API truy vấn tài liệu dinh dưỡng, có router thông minh",
     version="1.0.0"
 )
 

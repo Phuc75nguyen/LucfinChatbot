@@ -18,8 +18,7 @@ reranker = build_flag_reranker(model_id="AITeamVN/Vietnamese_Reranker", top_n=3)
 
 class NutritionRequest(BaseModel):
     question: str
-    department_id: dict | None 
-
+    # department_id removed
 
 class ChatMessageResponse(BaseModel):
     answer: str
@@ -30,7 +29,6 @@ class ChatMessageResponse(BaseModel):
 async def ask_nutrition(req: NutritionRequest):
     response_text, source_docs = routing(
         query_str=req.question,
-        user_department_id=req.department_id,
         vector_store=vector_store,
         embed_model=embed_model,
         llm=llm,
@@ -40,4 +38,4 @@ async def ask_nutrition(req: NutritionRequest):
     return ChatMessageResponse(
         answer=response_text,
         sourceDocuments=source_docs,
-    )   
+    )

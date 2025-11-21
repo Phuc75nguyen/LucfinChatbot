@@ -52,28 +52,7 @@ class ChromaDBRetriever(BaseRetriever):
         
         return nodes_with_scores
 
-        # # === Custom logic ===
-        # matched = [n for n in nodes_with_scores if n.node.metadata.get("department_id") == user_department_id]
-        # unmatched = [n for n in nodes_with_scores if n.node.metadata.get("department_id") != user_department_id]
-
-        # if len(nodes_with_scores) == 0:
-        #     # Case 3: Không có node nào được retrieve
-        #     self._case = "no_result"
-        #     return []
-
-        # if len(matched) == 0 and len(unmatched) > 0:
-        #     # Case 4: Có node nhưng không thuộc phòng ban
-        #     self._case = "wrong_department"
-        #     return []
-
-        # if len(matched) == len(nodes_with_scores):
-        #     # Case 1: Toàn bộ đúng phòng ban
-        #     self._case = "all_match"
-        #     return matched
-
-        # # Case 2: Một phần đúng, một phần sai
-        # self._case = "partial_match"
-        # return matched
+        return nodes_with_scores
     
 class FusionRetriever(BaseRetriever):
     """Ensemble retriever with fusion."""

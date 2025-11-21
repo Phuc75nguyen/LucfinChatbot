@@ -18,13 +18,10 @@ def build_index(path:str, collection_name:str, embed_model):
     # load documents & add doc_id metadata
     documents = SimpleDirectoryReader("./data").load_data()
 
-    for doc in documents:
-        file_name = doc.metadata.get("file_name")  # ví dụ: '123_5.pdf'
-        if file_name:
-            name_part = file_name.split(".")[0]         # '123_5'
-            doc_id_str, department_id_str = name_part.split("_")  # ['123', '5']
-            doc.metadata["doc_id"] = int(doc_id_str)
-            doc.metadata["department_id"] = int(department_id_str)
+    for i, doc in enumerate(documents):
+        file_name = doc.metadata.get("file_name")
+        # Assign a simple doc_id based on enumeration
+        doc.metadata["doc_id"] = i
     
     # Text splitter
     text_splitter = SentenceSplitter(chunk_size=1024, chunk_overlap=20)
