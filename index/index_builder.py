@@ -1,65 +1,70 @@
-from config import get_vector_store
-from llama_index.core import VectorStoreIndex, Document, StorageContext
-from llama_index.core.node_parser import SentenceSplitter
-from llama_index.vector_stores.chroma import ChromaVectorStore
-import chromadb
 import pandas as pd
-import os
+from llama_index.core import VectorStoreIndex, Settings
+from llama_index.core.schema import TextNode # Dùng TextNode thay vì Document để kiểm soát tốt hơn
+from config.embed import load_embed
 
-# Load index
-def load_rag_index(collection_name:str, embed_model):
-
-    vector_store = get_vector_store(collection_name=collection_name)
-    storage_context = StorageContext.from_defaults(vector_store=vector_store)
-    index = VectorStoreIndex.from_vector_store(vector_store, embed_model=embed_model, storage_context=storage_context)
-    return index
-
-def build_index(csv_path:str, collection_name:str, embed_model):
+def build_index(data_path="data/foods.csv", persist_dir="FoodDB"):
+    # 1. Load Model GPU
+    print("🔌 Đang khởi động Model trên GPU...")
+    embed_model = load_embed()
+    Settings.embed_model = embed_model # Cài đặt Global
     
-    if not os.path.exists(csv_path):
-        raise FileNotFoundError(f"CSV file not found at {csv_path}")
-
-    # Read CSV
-    df = pd.read_csv(csv_path)
+    # 2. Đọc Data
+    print("📂 Đang đọc CSV...")
+    df = pd.read_csv(data_path)
     
-    documents = []
+    # 3. Tạo Nodes (Thay vì Document)
+    # Node là đơn vị nhỏ nhất để lưu vào Vector DB
+    nodes = []
+    print("⚙️ Đang xử lý dữ liệu thô thành Nodes...")
+    
     for _, row in df.iterrows():
-        # Create text content
-        text = (
-            f"Món: {row.get('dish_name', '')}. "
-            f"Mô tả: {row.get('description', '')}. "
-            f"Thành phần: {row.get('ingredients', '')}. "
-            f"Loại: {row.get('dish_type', '')}."
+        # Tạo nội dung text để search
+        text_content = (
+            f"Món ăn: {row['dish_name']}\n"
+            f"Phân loại: {row['dish_type']}\n"
+            f"Mô tả: {row['description']}\n"
+            f"Thành phần: {row['ingredients']}\n"
+            f"Cách nấu: {row['cooking_method']}"
         )
         
-        # Create metadata
+        # Metadata
         metadata = {
-            "calories": row.get('calories'),
-            "protein": row.get('protein'),
-            "fat": row.get('fat'),
-            "fiber": row.get('fiber'),
-            "sugar": row.get('sugar'),
-            "image_link": row.get('image_link')
+            "dish_name": str(row['dish_name']),
+            "calories": int(row['calories']) if pd.notna(row['calories']) else 0,
+            "protein": int(row['protein']) if pd.notna(row['protein']) else 0,
+            "fat": int(row['fat']) if pd.notna(row['fat']) else 0,
+            "image_link": str(row['image_link']) if pd.notna(row['image_link']) else ""
         }
         
-        # Create Document
-        doc = Document(text=text, metadata=metadata)
-        documents.append(doc)
-
-    # Text splitter
-    text_splitter = SentenceSplitter(chunk_size=1024, chunk_overlap=20)
-
-    # chunking & indexing
-    db = chromadb.PersistentClient(path="./chroma_db")
-    chroma_collection = db.get_or_create_collection(collection_name)
-    vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
-    storage_context = StorageContext.from_defaults(vector_store=vector_store)
-
-    index = VectorStoreIndex.from_documents(
-        documents,
-        storage_context=storage_context,
-        embed_model=embed_model,
-        transformations=[text_splitter]
-    )
+        # Tạo Node
+        node = TextNode(text=text_content, metadata=metadata)
+        nodes.append(node)
     
+    # 4. MANUAL EMBEDDING (Đây là bước tăng tốc)
+    # Thay vì để Index tự chạy, ta tách text ra và ép Model chạy 1 lần
+    print(f"🚀 Bắt đầu nhúng Vector cho {len(nodes)} món ăn (Tốc độ cao)...")
+    
+    # Lấy danh sách text từ các nodes
+    text_chunks = [node.get_content(metadata_mode="embed") for node in nodes]
+    
+    # Gọi hàm get_text_embedding_batch trực tiếp (Hàm này chính là cái chạy nhanh trong debug_gpu.py)
+    # show_progress=True để hiển thị thanh loading chuẩn
+    embeddings = embed_model.get_text_embedding_batch(text_chunks, show_progress=True)
+    
+    # Gán ngược vector vào node
+    for node, embedding in zip(nodes, embeddings):
+        node.embedding = embedding
+
+    print("⚡ Đang đóng gói vào Index...")
+    
+    # 5. Tạo Index từ các Nodes đã có sẵn Vector (Không cần tính toán lại)
+    index = VectorStoreIndex(nodes)
+    
+    # 6. Lưu lại
+    index.storage_context.persist(persist_dir=persist_dir)
+    print(f"✅ Đã lưu xong {len(nodes)} món ăn vào '{persist_dir}' thành công!")
     return index
+
+if __name__ == "__main__":
+    build_index()

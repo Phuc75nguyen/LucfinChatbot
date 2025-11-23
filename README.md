@@ -10,4 +10,3 @@ Lucfin Nutrition Assistant is a RAG-based chatbot that provides intelligent nutr
 - Citation of internal sources.
 
 ## instruction of running the project
-- 
