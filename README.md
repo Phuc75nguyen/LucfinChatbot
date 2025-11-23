@@ -8,3 +8,6 @@ Lucfin Nutrition Assistant is a RAG-based chatbot that provides intelligent nutr
 - Context memory for multi-turn conversations.
 - Multi-criteria reasoning (low sugar, high protein, etc.).
 - Citation of internal sources.
+
+## instruction of running the project
+- 

@@ -1,9 +1,10 @@
-from config import get_vector_store 
-from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, StorageContext
+from config import get_vector_store
+from llama_index.core import VectorStoreIndex, Document, StorageContext
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.vector_stores.chroma import ChromaVectorStore
 import chromadb
-
+import pandas as pd
+import os
 
 # Load index
 def load_rag_index(collection_name:str, embed_model):
@@ -13,16 +14,38 @@ def load_rag_index(collection_name:str, embed_model):
     index = VectorStoreIndex.from_vector_store(vector_store, embed_model=embed_model, storage_context=storage_context)
     return index
 
-def build_index(path:str, collection_name:str, embed_model):
-
-    # load documents & add doc_id metadata
-    documents = SimpleDirectoryReader("./data").load_data()
-
-    for i, doc in enumerate(documents):
-        file_name = doc.metadata.get("file_name")
-        # Assign a simple doc_id based on enumeration
-        doc.metadata["doc_id"] = i
+def build_index(csv_path:str, collection_name:str, embed_model):
     
+    if not os.path.exists(csv_path):
+        raise FileNotFoundError(f"CSV file not found at {csv_path}")
+
+    # Read CSV
+    df = pd.read_csv(csv_path)
+    
+    documents = []
+    for _, row in df.iterrows():
+        # Create text content
+        text = (
+            f"Món: {row.get('dish_name', '')}. "
+            f"Mô tả: {row.get('description', '')}. "
+            f"Thành phần: {row.get('ingredients', '')}. "
+            f"Loại: {row.get('dish_type', '')}."
+        )
+        
+        # Create metadata
+        metadata = {
+            "calories": row.get('calories'),
+            "protein": row.get('protein'),
+            "fat": row.get('fat'),
+            "fiber": row.get('fiber'),
+            "sugar": row.get('sugar'),
+            "image_link": row.get('image_link')
+        }
+        
+        # Create Document
+        doc = Document(text=text, metadata=metadata)
+        documents.append(doc)
+
     # Text splitter
     text_splitter = SentenceSplitter(chunk_size=1024, chunk_overlap=20)
 
@@ -32,10 +55,11 @@ def build_index(path:str, collection_name:str, embed_model):
     vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
 
-    index = VectorStoreIndex(documents,
-                            storage_context=storage_context,
-                            embed_model=embed_model,
-                            text_splitter = text_splitter
-                            )
+    index = VectorStoreIndex.from_documents(
+        documents,
+        storage_context=storage_context,
+        embed_model=embed_model,
+        transformations=[text_splitter]
+    )
     
     return index

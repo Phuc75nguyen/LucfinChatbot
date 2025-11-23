@@ -34,7 +34,7 @@ def extract_answer(response: Response):
     if doc_ids is None:
         return remove_think_tags(response.response), None
     else:
-        return remove_think_tags('RAG: ' + response.response.text), doc_ids
+        return remove_think_tags('RAG: ' + str(response.response)), doc_ids
 
 def remove_think_tags(text):
     if "<think>" in text and "</think>" in text:
