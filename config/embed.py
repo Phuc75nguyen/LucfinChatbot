@@ -5,7 +5,7 @@ def load_embed():
     
     device_str = "cuda" if torch.cuda.is_available() else "cpu"
     
-    print(f"🚀 Đang chạy Embedding trên thiết bị: {device_str.upper()}")
+    print(f"Đang chạy Embedding trên thiết bị: {device_str.upper()}")
 
     embed_model = HuggingFaceEmbedding(
         #Phải chỉ định model tiếng Việt

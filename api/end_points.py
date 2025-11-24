@@ -38,7 +38,7 @@ async def ask_nutrition(req: NutritionRequest):
     engine = get_engine()
     
     # Gửi câu hỏi vào hệ thống RAG
-    print(f"❓ User asking: {req.question}")
+    print(f"User asking: {req.question}")
     response = engine.query(req.question)
     
     # Trích xuất nguồn (nếu có metadata)
