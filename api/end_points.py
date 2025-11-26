@@ -96,9 +96,11 @@ async def ask_nutrition(req: NutritionRequest):
             # Lấy tài liệu đầu tiên (độ tương đồng cao nhất)
             first_doc = source_docs[0]
             metadata = first_doc.metadata
+
+            print(f"\n🔥🔥🔥 DEBUG METADATA: {metadata}\n")
             
             # Kiểm tra các key phổ biến mà bạn có thể đã lưu trong DB
-            image_url = metadata.get("image") or metadata.get("link") or metadata.get("image_url")
+            image_url = metadata.get("image_link") or metadata.get("image") or metadata.get("link")
 
             # B. Lấy nguồn tham khảo
             for doc in source_docs:
