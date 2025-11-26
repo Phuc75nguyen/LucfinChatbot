@@ -29,30 +29,50 @@ class NutritionQueryEngine(BaseQueryEngine):
                 metadata={"doc_ids": None}
             )
 
-        # 3. Tạo Context (Ghép các đoạn văn bản lại)
-        context = "\n".join([n.node.text for n in rerank_nodes])
+        # 3. Tạo Context (CÓ SỬA ĐỔI QUAN TRỌNG)
+        # Thay vì chỉ join text, ta sẽ lấy cả link ảnh từ metadata ghép vào
+        context_parts = []
+        source_names = [] # Lưu tên món để debug
+
+        for n in rerank_nodes:
+            # Lấy nội dung văn bản
+            text_content = n.node.text
+            
+            # Lấy link ảnh từ metadata
+            image_link = n.node.metadata.get("image_link", "")
+            
+            # Kiểm tra nếu có link ảnh hợp lệ thì ghép vào text
+            # Format này giúp LLM hiểu: "À, đoạn văn này có cái ảnh đi kèm ở đây"
+            if image_link and str(image_link) != "nan" and str(image_link).startswith("http"):
+                text_content += f"\n[IMAGE_URL: {image_link}]"
+            
+            context_parts.append(text_content)
+            
+            # Lấy tên món ăn để trả về metadata (giúp API hiển thị source)
+            dish_name = n.node.metadata.get("dish_name", "Unknown")
+            source_names.append(dish_name)
+
+        # Nối các đoạn lại với nhau
+        context = "\n---------------------\n".join(context_parts)
 
         # ==========================================================
-        # 4.  GẮN PROMPT LUCFIN VÀO ĐÂY
+        # 4. GẮN PROMPT LUCFIN
         # ==========================================================
-        # Template sẽ tự điền context vào chỗ {context_str} và câu hỏi vào chỗ {query_str}
         formatted_prompt = qa_prompt_tmpl.format(
             context_str=context, 
             query_str=query_bundle.query_str
         )
 
         # 5. Gửi cho LLM trả lời
-        # Lúc này LLM sẽ nhận được toàn bộ hướng dẫn "Bạn là chuyên gia Lucfin..."
-        answer = self.llm.complete(formatted_prompt) # Lưu ý: Dùng formatted_prompt
+        answer = self.llm.complete(formatted_prompt)
 
-        # 6. Trích xuất Doc IDs để debug
-        doc_ids = list(set([
-            n.node.metadata.get("doc_id")
-            for n in rerank_nodes
-            if n.node.metadata.get("doc_id") is not None
-        ])) or None
-
-        return Response(response=str(answer), metadata={"doc_ids": doc_ids})
+        # 6. Trả về Response kèm Source Nodes (quan trọng để API lấy được metadata gốc)
+        # Lưu ý: LlamaIndex cần source_nodes để truy xuất metadata sau này
+        return Response(
+            response=str(answer), 
+            source_nodes=rerank_nodes, # <-- TRẢ VỀ CẢ NODE GỐC
+            metadata={"doc_ids": source_names}
+        )
 
     async def _aquery(self, query_bundle: QueryBundle) -> RESPONSE_TYPE:
         raise NotImplementedError("Async query not supported.")

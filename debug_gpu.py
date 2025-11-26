@@ -5,7 +5,7 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
 def test_gpu_speed():
     print("="*50)
-    print("🛠️ BẮT ĐẦU CHẨN ĐOÁN GPU & TỐC ĐỘ")
+    print("BẮT ĐẦU CHẨN ĐOÁN GPU & TỐC ĐỘ")
     print("="*50)
 
     # 1. KIỂM TRA PHẦN CỨNG (HARDWARE CHECK)

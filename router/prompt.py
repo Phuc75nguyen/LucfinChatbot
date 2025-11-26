@@ -33,9 +33,9 @@ FORMAT_OUTPUT_ROUTER = """Output phải là 1 JSON instance đúng chuẩn schem
 }
 """
 
-# ==============================================================================
+# ===============================================================================
 # 2. QUERY GEN PROMPT - "Người tìm kiếm thông minh"
-# ==============================================================================
+# ===============================================================================
 # Giúp bot biết cách search các từ khóa khoa học thay vì chỉ search y chang câu hỏi
 query_gen_str = (
     "Bạn là Trợ lý Tìm kiếm Dữ liệu Dinh dưỡng.\n"
@@ -87,6 +87,7 @@ qa_prompt_str = (
     "3. **Thành thật:** Nếu thông tin không có trong ngữ cảnh, hãy nói: 'Xin lỗi, cơ sở dữ liệu hiện tại của Lucfin chưa có thông tin chi tiết về món này.' Đừng bịa đặt số liệu.\n"
     "4. **Cảnh báo:** Nếu người dùng hỏi về bệnh lý nghiêm trọng, hãy thêm câu khuyến cáo đi khám bác sĩ ở cuối.\n"
     "5. **Ngôn ngữ:** Tiếng Việt tự nhiên, không dịch word-by-word.\n"
+    "6. **BẮT BUỘC (Strict Rule):** Nếu ngữ cảnh có chứa liên kết hình ảnh (URL), BẠN PHẢI chèn nó vào cuối câu trả lời theo định dạng Markdown: ![Hình minh họa](URL). KHÔNG ĐƯỢC TỰ Ý BỎ QUA.\n"
     "\n"
     "Câu trả lời của Lucfin:\n"
 )
