@@ -11,6 +11,6 @@ def load_embed():
         #Phải chỉ định model tiếng Việt
         model_name="AITeamVN/Vietnamese_Embedding", 
         device=device_str,  # Truyền string vào đây
-        embed_batch_size=4 # Card T1000 tải tốt mức này
+        embed_batch_size=3 # Card T1000 tải tốt mức này
     )
     return embed_model
