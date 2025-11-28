@@ -15,7 +15,7 @@ class LlamaIndexRetrieverWrapper(BaseRetriever):
     ) -> List[Document]:
         """Get documents relevant to a query."""
         # Use the LlamaIndex retriever
-        retriever = self.index.as_retriever(similarity_top_k=3)
+        retriever = self.index.as_retriever(similarity_top_k=2)
         response = retriever.retrieve(query)
         
         # Convert LlamaIndex nodes to LangChain documents
