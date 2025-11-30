@@ -28,6 +28,36 @@ def get_chat_history(session_id: str):
     if session_id not in CHAT_HISTORIES:
         CHAT_HISTORIES[session_id] = []
     return CHAT_HISTORIES[session_id]
+import re
+import os
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+from typing import List, Optional, Dict
+from config.vector_store import get_vector_store
+from utils.utils import remove_think_tags
+from api.langchain_utils import get_conversational_rag_chain
+from langchain_groq import ChatGroq
+from langchain_core.messages import HumanMessage, AIMessage
+from langchain_core.prompts import PromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from dotenv import load_dotenv
+
+router = APIRouter()
+
+# --- Global Store ---
+CHAT_HISTORIES: Dict[str, List] = {}
+ROOT_INDEX = None
+
+def get_root_index():
+    global ROOT_INDEX
+    if ROOT_INDEX is None:
+        ROOT_INDEX = get_vector_store()
+    return ROOT_INDEX
+
+def get_chat_history(session_id: str):
+    if session_id not in CHAT_HISTORIES:
+        CHAT_HISTORIES[session_id] = []
+    return CHAT_HISTORIES[session_id]
 
 # --- Models ---
 class NutritionRequest(BaseModel):
@@ -38,6 +68,7 @@ class ChatMessageResponse(BaseModel):
     answer: str
     image: Optional[str] = None
     sourceDocuments: Optional[List[str]] = None
+    retrieved_contexts: Optional[List[str]] = None
 
 # --- Helper: Router
 def classify_query(llm, query: str) -> str:
@@ -115,6 +146,7 @@ async def ask_nutrition(req: NutritionRequest):
         final_answer = ""
         image_url = None
         sources = []
+        retrieved_contexts = []
 
         # --- TRƯỜNG HỢP 1: HỎI VỀ DINH DƯỠNG (CHẠY RAG) ---
         if intent == "NUTRITION":
@@ -140,6 +172,7 @@ async def ask_nutrition(req: NutritionRequest):
                 # Lấy tên các món ăn tham khảo
                 for doc in source_docs:
                     sources.append(doc.metadata.get("dish_name", "Tài liệu gốc"))
+                    retrieved_contexts.append(doc.page_content)
             
             final_answer, _ = extract_image_link(raw_answer) # Làm sạch text lần nữa
 
@@ -160,6 +193,7 @@ async def ask_nutrition(req: NutritionRequest):
             # Chitchat thì không có ảnh và nguồn
             image_url = None
             sources = []
+            retrieved_contexts = []
 
         # 4. Lưu lịch sử chat
         chat_history.append(HumanMessage(content=req.question))
@@ -174,7 +208,8 @@ async def ask_nutrition(req: NutritionRequest):
         return ChatMessageResponse(
             answer=final_answer,
             image=image_url,
-            sourceDocuments=list(set(sources))
+            sourceDocuments=list(set(sources)),
+            retrieved_contexts=retrieved_contexts
         )
         
     except Exception as e:
