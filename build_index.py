@@ -3,7 +3,7 @@ from llama_index.core import VectorStoreIndex, Settings
 from llama_index.core.schema import TextNode # <--- Code mới dùng TextNode
 from config.embed import load_embed
 
-def build_index(data_path="data/foods.csv", persist_dir="FoodDB"):
+def build_index(data_path="data_raw/foods.csv", persist_dir="FoodDB"):
     # 1. Load Model GPU
     print("🔌 Đang khởi động Model trên GPU...")
     embed_model = load_embed()

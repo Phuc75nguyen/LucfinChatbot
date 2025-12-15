@@ -13,8 +13,7 @@ __pycache__/
 *.py[cod]
 
 # Bỏ qua dữ liệu output và index
-chroma_db/
-data/
+data_raw/
 *.csv
 *.tsv
 *.xlsx
@@ -45,3 +44,5 @@ Thumbs.db
 # File thử nghiệm
 advance_rag.ipynb
 rag.ipynb
+verify_rerank_loader.py
+verify_reprt.py
