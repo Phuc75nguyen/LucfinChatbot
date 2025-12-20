@@ -3,20 +3,32 @@ import os
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional, Dict
-from config.vector_store import get_vector_store
-from utils.utils import remove_think_tags
-from api.langchain_utils import get_conversational_rag_chain
+from dotenv import load_dotenv
+
+# --- IMPORTS ---
 from langchain_groq import ChatGroq
-from langchain_core.messages import HumanMessage, AIMessage
+from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from dotenv import load_dotenv
+
+from config.vector_store import get_vector_store
+from config.rerank import load_reranker 
+from api.langchain_utils import get_conversational_rag_chain
+from utils.utils import remove_think_tags
+from utils.session_manager import update_scan_result, get_scanned_context 
 
 router = APIRouter()
 
-# --- Global Store ---
-CHAT_HISTORIES: Dict[str, List] = {}
+# =========================================================
+# 👇 QUẢN LÝ TRẠNG THÁI (STATE MANAGEMENT) TẠI CHỖ
+# =========================================================
 ROOT_INDEX = None
+CHAT_HISTORIES: Dict[str, List] = {}
+
+# Di chuyển biến SESSION_FOCUS về đây để đảm bảo tính nhất quán
+# "SCAN": Đang tập trung vào món vừa chụp
+# "RAG": Đang chat về món trong database/chủ đề mới
+SESSION_FOCUS: Dict[str, str] = {} 
 
 def get_root_index():
     global ROOT_INDEX
@@ -29,134 +41,159 @@ def get_chat_history(session_id: str):
         CHAT_HISTORIES[session_id] = []
     return CHAT_HISTORIES[session_id]
 
-# --- Models ---
+CV_TO_VIETNAMESE = {
+    "Suon": "Sườn non", "Cha Ca": "Chả cá", "Tofu": "Đậu hũ", "Unknown": ""
+}
+
 class NutritionRequest(BaseModel):
     question: str
     session_id: str = "default_user"
+
+class ScanData(BaseModel):
+    session_id: str
+    detected_classes: List[str] 
 
 class ChatMessageResponse(BaseModel):
     answer: str
     image: Optional[str] = None
     sourceDocuments: Optional[List[str]] = None
-    # ĐÃ XÓA retrieved_contexts ở đây để tránh lỗi App
 
-# --- Helper: Router
+# =========================================================
+# 👇 ROUTER & HELPER
+# =========================================================
 def classify_query(llm, query: str) -> str:
     template = """
-    Bạn là một công cụ phân loại văn bản.
-    Nhiệm vụ: Chỉ trả về đúng 1 từ: "NUTRITION" hoặc "CHITCHAT".
+    Phân loại câu hỏi:
+    1. "FOLLOWUP": Hỏi tiếp về món đang nói ("món này", "nó", "vừa ăn", "có béo không", "ngon không").
+    2. "NEW_TOPIC": Hỏi về món ăn cụ thể MỚI có tên riêng ("Cơm hến", "Phở", "Bún bò", "Canh chua").
+    3. "CHITCHAT": Xã giao, thời tiết, chính trị, bóng đá, không liên quan ăn uống.
     
-    HƯỚNG DẪN:
-    - NUTRITION: Câu hỏi về món ăn, cách nấu, calo, thực phẩm, ăn uống, bệnh lý ăn kiêng.
-    - CHITCHAT: Câu hỏi về thời tiết, giá vàng, chứng khoán, tin tức, chào hỏi, tên bạn là gì, lập trình, chính trị.
-
     Câu hỏi: "{question}"
-    
-    Phân loại (Chỉ trả về 1 từ):
+    Chỉ trả về 1 từ (FOLLOWUP / NEW_TOPIC / CHITCHAT):
     """
     prompt = PromptTemplate.from_template(template)
     chain = prompt | llm | StrOutputParser()
-    
     try:
-        raw_result = chain.invoke({"question": query})
-        # Xóa thẻ <think> trước khi kiểm tra
-        clean_result = remove_think_tags(str(raw_result)).strip().upper()
-        print(f"🔍 DEBUG ROUTER: Raw='{raw_result[:20]}...' -> Clean='{clean_result}'")
-        
-        if "NUTRITION" in clean_result: return "NUTRITION"
-        if "CHITCHAT" in clean_result: return "CHITCHAT"
-        return "NUTRITION"
-    except Exception as e:
-        print(f"⚠️ Router Error: {e}")
-        return "NUTRITION"
+        res = chain.invoke({"question": query})
+        clean = remove_think_tags(str(res)).strip().upper()
+        if "CHIT" in clean: return "CHITCHAT"
+        if "NEW" in clean: return "NEW_TOPIC"
+        return "FOLLOWUP"
+    except: return "FOLLOWUP"
 
-# --- Helper: Extract Image ---
 def extract_image_link(text):
     pattern = r"!\[.*?\]\((http.*?)\)"
     match = re.search(pattern, text)
-    if match:
-        image_url = match.group(1)
-        clean_text = re.sub(pattern, "", text).strip()
-        clean_text = re.sub(r'\n\s*\n', '\n\n', clean_text)
-        return clean_text, image_url
+    if match: return re.sub(pattern, "", text).strip(), match.group(1)
     return text, None
 
-# --- Endpoint Chính ---
+# --- API SCAN ---
+@router.post("/scan")
+async def receive_scan_data(data: ScanData):
+    mapped = []
+    for item in data.detected_classes:
+        vn = CV_TO_VIETNAMESE.get(item, item)
+        if vn: mapped.append(vn)
+    if mapped:
+        update_scan_result(data.session_id, mapped)
+        
+        # 👇 KHI SCAN: BẮT BUỘC CHUYỂN TIÊU ĐIỂM VỀ SCAN
+        SESSION_FOCUS[data.session_id] = "SCAN"
+        print(f"📸 [Session: {data.session_id}] Focus set to: SCAN")
+        
+        return {"message": "Đã đồng bộ context.", "mapped_names": mapped}
+    return {"message": "Không nhận diện được."}
+
+# --- API ASK ---
 @router.post("/ask", response_model=ChatMessageResponse)
 async def ask_nutrition(req: NutritionRequest):
     try:
         load_dotenv()
         api_key = os.getenv("MY_API_KEY")
-        
-        # 1. Khởi tạo LLM
+        load_reranker()
         llm = ChatGroq(model="qwen/qwen3-32b", api_key=api_key, temperature=0)
         
-        # 2. Lấy lịch sử chat
         chat_history = get_chat_history(req.session_id)
-        print(f"🗣️ [{req.session_id}] User: {req.question}")
-
-        # 3. Router Step
+        scanned_food = get_scanned_context(req.session_id)
+        
+        # 1. Phân loại ý định
         intent = classify_query(llm, req.question)
-        print(f"🧭 INTENT DETECTED: {intent}")
+        
+        # 2. QUẢN LÝ TIÊU ĐIỂM (LOGIC CHẶT CHẼ HƠN)
+        if intent == "NEW_TOPIC":
+            # Nếu hỏi món mới -> Quên ngay món Scan -> Chuyển sang RAG
+            SESSION_FOCUS[req.session_id] = "RAG"
+            print(f"🔄 Intent là NEW_TOPIC -> Chuyển Focus sang: RAG")
+        
+        # Lấy focus hiện tại (Mặc định là RAG nếu chưa có)
+        current_focus = SESSION_FOCUS.get(req.session_id, "RAG")
+        
+        print(f"🗣️ User: {req.question} | Intent: {intent} | Focus: {current_focus}")
 
-        final_answer = ""
-        image_url = None
-        sources = []
+        final_answer, image_url, sources = "", None, []
 
-        # --- CASE 1: NUTRITION ---
-        if intent == "NUTRITION":
+        # ==============================================================================
+        # 🔴 LUỒNG A: SCAN FOLLOWUP (Chỉ chạy khi User đang nhìn vào Camera)
+        # ==============================================================================
+        # Điều kiện: Intent là Followup VÀ Focus đang là SCAN VÀ Có dữ liệu Scan
+        if intent == "FOLLOWUP" and current_focus == "SCAN" and scanned_food:
+            print("🚀 CASE A: Trả lời về món Scan (General Knowledge).")
+            
+            system_prompt = (
+                f"Bạn là Lucfin. Người dùng đang hỏi về món họ vừa chụp ảnh: {scanned_food}. "
+                "Hãy trả lời ngắn gọn (80 chữ), tập trung dinh dưỡng, không cần tra cứu DB."
+            )
+            ai_msg = llm.invoke([SystemMessage(content=system_prompt), HumanMessage(content=req.question)])
+            final_answer = remove_think_tags(str(ai_msg.content))
+            image_url = "USE_LOCAL_IMAGE"
+            sources = ["Kiến thức tổng quát Lucfin"]
+
+        # ==============================================================================
+        # 🔵 LUỒNG B: RAG FOODDB (Chạy khi New Topic HOẶC Focus đang là RAG)
+        # ==============================================================================
+        elif intent == "NEW_TOPIC" or (intent == "FOLLOWUP" and current_focus == "RAG"):
+            print("books CASE B: Chạy RAG tìm kiếm trong FoodDB.")
+            
             index = get_root_index()
             rag_chain = get_conversational_rag_chain(llm, index)
-            
-            response = rag_chain.invoke({
-                "input": req.question,
-                "chat_history": chat_history
-            })
+            response = rag_chain.invoke({"input": req.question, "chat_history": chat_history})
             
             raw_answer = remove_think_tags(str(response["answer"]))
             
-            # Lấy ảnh & Source
             source_docs = response.get("context", [])
             if source_docs:
-                first_doc = source_docs[0]
-                metadata = first_doc.metadata
-                image_url = metadata.get("image_link") or metadata.get("image")
-                
-                for doc in source_docs:
-                    sources.append(doc.metadata.get("dish_name", "Tài liệu gốc"))
+                meta = source_docs[0].metadata
+                image_url = meta.get("image_link") or meta.get("image")
+                sources = [d.metadata.get("dish_name", "Tài liệu") for d in source_docs]
             
-            final_answer, _ = extract_image_link(raw_answer)
+            final_answer, extracted_img = extract_image_link(raw_answer)
+            if not image_url and extracted_img: image_url = extracted_img
 
-        # --- CASE 2: CHITCHAT ---
+        # ==============================================================================
+        # 🟡 LUỒNG C: CHITCHAT (ĐÃ SỬA: CẤM TRẢ LỜI THỜI TIẾT)
+        # ==============================================================================
         else:
-            refusal_prompt = [
-                ("system", "Bạn là Lucfin, trợ lý ảo chuyên về dinh dưỡng và ẩm thực. "
-                           "Phong cách trả lời: Thân thiện, lịch sự, ngắn gọn (dưới 2 câu), "
-                           "luôn xưng tên là Lucfin. "
-                           "Nếu người dùng hỏi chủ đề không liên quan (giá vàng, thời tiết...), "
-                           "hãy xin lỗi khéo léo và gợi ý họ hỏi về món ăn."),
-                ("human", req.question)
-            ]
-            ai_msg = llm.invoke(refusal_prompt)
+            print("💬 CASE C: Chitchat (Kích hoạt bộ lọc nội dung).")
+            # 👇👇👇 PROMPT CỰC GẮT ĐỂ CẤM HỎI THỜI TIẾT 👇👇👇
+            system_instruction = (
+                "Bạn là Lucfin, trợ lý chuyên về DINH DƯỠNG và ẨM THỰC. "
+                "QUY TẮC TỪ CHỐI (REFUSAL POLICY):"
+                "1. Nếu người dùng hỏi về: Thời tiết, Giá vàng, Chứng khoán, Chính trị, Lịch sử, Code, Tin tức..."
+                "   -> HÃY TỪ CHỐI LỊCH SỰ. Nói: 'Xin lỗi, tôi là trợ lý dinh dưỡng, tôi không có thông tin về vấn đề này.'"
+                "   -> TUYỆT ĐỐI KHÔNG bịa ra thời tiết hay thông tin sai lệch."
+                "2. Nếu hỏi 'Bạn là ai', 'Ai tạo ra bạn':"
+                "   -> Trả lời: 'Tôi là Lucfin, sản phẩm của đội ngũ NutriAI.'"
+            )
+            ai_msg = llm.invoke([("system", system_instruction), ("human", req.question)])
             final_answer = remove_think_tags(str(ai_msg.content))
-            image_url = None
-            sources = []
 
         # 4. Update History
         chat_history.append(HumanMessage(content=req.question))
         chat_history.append(AIMessage(content=final_answer))
-        
-        if len(chat_history) > 6:
-            chat_history = chat_history[-6:]
-            CHAT_HISTORIES[req.session_id] = chat_history
+        if len(chat_history) > 6: CHAT_HISTORIES[req.session_id] = chat_history[-6:]
 
-        # 5. Return JSON (Đã bỏ retrieved_contexts)
-        return ChatMessageResponse(
-            answer=final_answer,
-            image=image_url,
-            sourceDocuments=list(set(sources))
-        )
-        
+        return ChatMessageResponse(answer=final_answer, image=image_url, sourceDocuments=list(set(sources)))
+
     except Exception as e:
         print(f"❌ Error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
