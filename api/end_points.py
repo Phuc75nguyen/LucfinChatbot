@@ -159,15 +159,29 @@ async def ask_nutrition(req: NutritionRequest):
             response = rag_chain.invoke({"input": req.question, "chat_history": chat_history})
             
             raw_answer = remove_think_tags(str(response["answer"]))
+            final_answer = raw_answer # Tạm gán
             
-            source_docs = response.get("context", [])
-            if source_docs:
-                meta = source_docs[0].metadata
-                image_url = meta.get("image_link") or meta.get("image")
-                sources = [d.metadata.get("dish_name", "Tài liệu") for d in source_docs]
+            # --- 👇👇👇 LOGIC MỚI: KIỂM TRA TỪ CHỐI (REFUSAL CHECK) 👇👇👇 ---
+            # Các từ khóa cho thấy Bot đang từ chối trả lời món hư cấu
+            refusal_keywords = ["món ăn hư cấu", "không phải là món ăn thực tế", "không có thực", "xin lỗi"]
             
-            final_answer, extracted_img = extract_image_link(raw_answer)
-            if not image_url and extracted_img: image_url = extracted_img
+            is_refused = any(keyword in raw_answer.lower() for keyword in refusal_keywords)
+            
+            if is_refused:
+                print("🚫 Phát hiện câu trả lời từ chối -> Ẩn ảnh và nguồn.")
+                image_url = None
+                sources = []
+            else:
+                # Chỉ lấy ảnh nếu KHÔNG bị từ chối
+                source_docs = response.get("context", [])
+                if source_docs:
+                    meta = source_docs[0].metadata
+                    image_url = meta.get("image_link") or meta.get("image")
+                    sources = [d.metadata.get("dish_name", "Tài liệu") for d in source_docs]
+                
+                # Check ảnh trong text (nếu có)
+                final_answer, extracted_img = extract_image_link(raw_answer)
+                if not image_url and extracted_img: image_url = extracted_img
 
         # ==============================================================================
         # 🟡 LUỒNG C: CHITCHAT (ĐÃ SỬA: CẤM TRẢ LỜI THỜI TIẾT)

@@ -83,6 +83,7 @@ def get_conversational_rag_chain(llm, index):
         "   - Nếu món ăn là HƯ CẤU, PHI LÝ hoặc KHÔNG THỂ ĂN ĐƯỢC (Ví dụ: 'Trứng khủng long', 'Thịt rồng', 'Canh nước mắt cá sấu', 'Bê tông xào', 'Gạch nung chấm mắm')..."
         "   -> TỪ CHỐI TRẢ LỜI NGAY. Nói: 'Xin lỗi, món [Tên món] không phải là thực phẩm thực tế, Lucfin không thể phân tích.'"
         "   -> TUYỆT ĐỐI KHÔNG BỊA ra dinh dưỡng cho các món hư cấu này."
+        "   -> TUYỆT ĐỐI KHÔNG dùng bảng (Markdown Table) với các ký tự '|' và '---'."
         
         "2. XỬ LÝ DỰA TRÊN CONTEXT:"
         "   - Nếu là món ăn thật (Ví dụ: 'Phở', 'Cơm hến') -> Ưu tiên dùng thông tin trong Context để trả lời."
