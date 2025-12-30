@@ -46,3 +46,8 @@ advance_rag.ipynb
 rag.ipynb
 verify_rerank_loader.py
 verify_reprt.py
+
+#bỏ qua file .xlsx
+*.xlsx
+# bỏ qua file .csv
+*.csv
