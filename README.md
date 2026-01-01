@@ -37,44 +37,44 @@ We don't just claim it works; here is the proof of our **Backend (Uvicorn Logs)*
 ### 1. 👁️ Visual Intelligence (AI Camera)
 **Capability:** Instantly recognizes Vietnamese dishes from images and injects context into the conversation without searching the database.
 
-| Backend Execution (Uvicorn Log) | Android Client Experience |
-|:---:|:---:|
-| <img src="images/demo_vision_log.png" width="400"> | <img src="images/demo_vision_app.png" width="200"> |
-| *Log evidence: `YOLO detected: Tofu chien`* | *User sees the food name immediately.* |
+| Backend Execution (Uvicorn Log)
+|:---:|
+| <img src="images/CvDetect.png" width="400"> 
+| *Log evidence: `YOLO detected: Cơm hến`* |
 
 ### 2. 🧠 Deep Nutrition Knowledge (RAG)
 **Capability:** answers complex nutritional queries (Calories, Protein, Fat) by retrieving and re-ranking documents from the internal Knowledge Base.
 
-| Backend Execution (Uvicorn Log) | Android Client Experience |
-|:---:|:---:|
-| <img src="images/deepRAG.png" width="400"> | <img src="images/demo_rag_app.png" width="200"> |
-| *Log evidence: `Retrieving nodes...`, `Re-ranker score: 0.95`* | *Detailed nutritional breakdown provided.* |
+| Backend Execution (Uvicorn Log)
+|:---:|
+| <img src="images/deepRAG.png" width="400"> 
+| *Log evidence: `Retrieving nodes...`, `Re-ranker score: 0.95`* |
 
 ### 3. 💬 Smart Routing & Chitchat: case1: check_gaurdrail
 **Capability:** The **Semantic Router** distinguishes between technical queries and casual conversation to provide natural responses.
 
-| Backend Execution (Uvicorn Log) | Android Client Experience |
-|:---:|:---:|
-| <img src="images/trungKL.png" width="400"> | <img src="images/demo_chitchat_app.png" width="200"> |
+| Backend Execution (Uvicorn Log)
+|:---:|
+| <img src="images/trungKL.png" width="400"> |
 | *Log evidence: `Intent: CHITCHAT`, `Routing to: Safety Pipeline`* | *Natural, human-like interaction.* |
 
 ---
 ### 4. 💬 Smart Routing & Chitchat: case2: check_unreliable_content
 **Capability:** The **Semantic Router** distinguishes between technical queries and casual conversation to provide natural responses.
 
-| Backend Execution (Uvicorn Log) | Android Client Experience |
-|:---:|:---:|
-| <img src="images/weather.png" width="400"> | <img src="images/demo_chitchat_app.png" width="200"> |
-| *Log evidence: `Intent: CHITCHAT`, `Routing to: Safety Pipeline`* | *Natural, human-like interaction.* |
+| Backend Execution (Uvicorn Log)
+|:---:|
+| <img src="images/weather.png" width="400"> 
+| *Log evidence: `Intent: CHITCHAT`, `Routing to: Safety Pipeline`* |
 
 ---
 ### 5. 💬 Smart Routing & Chitchat: case3: check_normal_speaking
 **Capability:** The **Semantic Router** distinguishes between technical queries and casual conversation to provide natural responses.
 
-| Backend Execution (Uvicorn Log) | Android Client Experience |
-|:---:|:---:|
-| <img src="images/chaohoi.png" width="400"> | <img src="images/demo_chitchat_app.png" width="200"> |
-| *Log evidence: `Intent: CHITCHAT`, `Routing to: Safety Pipeline`* | *Natural, human-like interaction.* |
+| Backend Execution (Uvicorn Log)
+|:---:|
+| <img src="images/chaohoi.png" width="400"> 
+| *Log evidence: `Intent: CHITCHAT`, `Routing to: Safety Pipeline`* |
 
 ---
 
