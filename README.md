@@ -39,23 +39,41 @@ We don't just claim it works; here is the proof of our **Backend (Uvicorn Logs)*
 
 | Backend Execution (Uvicorn Log) | Android Client Experience |
 |:---:|:---:|
-| *[Insert Screenshot of Uvicorn log showing YOLO detection & Pipeline A activation]* | *[Insert Screenshot of Android App recognizing a dish]* |
-| *Log evidence: `YOLO detected: Pho Bo`, `Context Injection: Success`* | *User sees the food name immediately.* |
+| <img src="images/demo_vision_log.png" width="400"> | <img src="images/demo_vision_app.png" width="200"> |
+| *Log evidence: `YOLO detected: Tofu chien`* | *User sees the food name immediately.* |
 
 ### 2. 🧠 Deep Nutrition Knowledge (RAG)
 **Capability:** answers complex nutritional queries (Calories, Protein, Fat) by retrieving and re-ranking documents from the internal Knowledge Base.
 
 | Backend Execution (Uvicorn Log) | Android Client Experience |
 |:---:|:---:|
-| *[Insert Screenshot of Uvicorn log showing ChromaDB retrieval & Re-ranking]* | *[Insert Screenshot of Android App answering "How many calories?"]* |
+| <img src="images/deepRAG.png" width="400"> | <img src="images/demo_rag_app.png" width="200"> |
 | *Log evidence: `Retrieving nodes...`, `Re-ranker score: 0.95`* | *Detailed nutritional breakdown provided.* |
 
-### 3. 💬 Smart Routing & Chitchat
+### 3. 💬 Smart Routing & Chitchat: case1: check_gaurdrail
 **Capability:** The **Semantic Router** distinguishes between technical queries and casual conversation to provide natural responses.
 
 | Backend Execution (Uvicorn Log) | Android Client Experience |
 |:---:|:---:|
-| *[Insert Screenshot of Uvicorn log showing Intent Classification]* | *[Insert Screenshot of Android App chatting socially]* |
+| <img src="images/trungKL.png" width="400"> | <img src="images/demo_chitchat_app.png" width="200"> |
+| *Log evidence: `Intent: CHITCHAT`, `Routing to: Safety Pipeline`* | *Natural, human-like interaction.* |
+
+---
+### 4. 💬 Smart Routing & Chitchat: case2: check_unreliable_content
+**Capability:** The **Semantic Router** distinguishes between technical queries and casual conversation to provide natural responses.
+
+| Backend Execution (Uvicorn Log) | Android Client Experience |
+|:---:|:---:|
+| <img src="images/weather.png" width="400"> | <img src="images/demo_chitchat_app.png" width="200"> |
+| *Log evidence: `Intent: CHITCHAT`, `Routing to: Safety Pipeline`* | *Natural, human-like interaction.* |
+
+---
+### 5. 💬 Smart Routing & Chitchat: case3: check_normal_speaking
+**Capability:** The **Semantic Router** distinguishes between technical queries and casual conversation to provide natural responses.
+
+| Backend Execution (Uvicorn Log) | Android Client Experience |
+|:---:|:---:|
+| <img src="images/chaohoi.png" width="400"> | <img src="images/demo_chitchat_app.png" width="200"> |
 | *Log evidence: `Intent: CHITCHAT`, `Routing to: Safety Pipeline`* | *Natural, human-like interaction.* |
 
 ---
@@ -63,7 +81,7 @@ We don't just claim it works; here is the proof of our **Backend (Uvicorn Logs)*
 ## 🛠️ Technology Stack
 
 * **Core AI Engine:**
-    * **LLM:** Llama-3.3-70B (via Groq API) for high-fidelity generation.
+    * **LLM:** Qwen-3-32B (via Groq API) for high-fidelity generation.
     * **Embeddings:** `AITeamVN/Vietnamese_Embedding` (State-of-the-art for Vietnamese).
     * **Vision:** YOLOv11 custom trained on Vietnamese Food Dataset.
 * **RAG Infrastructure:**
@@ -96,8 +114,8 @@ The system was evaluated using the **Ragas Framework** (LLM-as-a-Judge) on a tes
 
 1.  **Clone the repository**
     ```bash
-    git clone [https://github.com/yourusername/lucfin-nutrition-assistant.git](https://github.com/yourusername/lucfin-nutrition-assistant.git)
-    cd lucfin-nutrition-assistant
+    git clone https://github.com/Phuc75nguyen/LucfinChatbot.git
+    cd LucfinChatbot
     ```
 
 2.  **Install dependencies**
@@ -128,10 +146,8 @@ The system was evaluated using the **Ragas Framework** (LLM-as-a-Judge) on a tes
 
 ## 👨‍💻 Author
 
-**[Your Name]**
+**[Nguyen Tan Phuc]**
 * Role: AI Engineer & System Architect
-* Contact: [Your Email]
-* LinkedIn: [Your Profile Link]
-
+* Contact: phuc75nguyen@gmail.com
 ---
-*Built with ❤️ and lots of coffee.*
+*Built with Team Phuc-Linh❤️ and lots of coffee.*
