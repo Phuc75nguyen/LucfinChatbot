@@ -10,7 +10,17 @@
 **Lucfin** is not just a chatbot; it's an intelligent nutrition consultant powered by **Adaptive RAG (Retrieval-Augmented Generation)**. It combines Computer Vision (YOLO) for food recognition with a high-performance Vector Database to provide accurate, scientifically-backed nutritional insights for Vietnamese dishes.
 
 ---
+## 🏗️ System with RAG and without RAG
 
+System with just an LLM is not enough to provide accurate nutritional insights for Vietnamese dishes. And it will be hallucinated a lot. 
+Otherwise, the system with RAG will be more accurate and reliable.
+<p align="center">
+  <img src="images/basicRAG.png" alt="Lucfin 3-Layer Architecture" width="80%">
+  <br>
+  <em>Figure 1: The Basic RAG Pipeline of Lucfin</em>
+</p>
+
+---
 ## 🏗️ System Architecture
 
 Lucfin operates on a **3-Layer Pipeline** architecture designed to optimize latency and accuracy:
@@ -25,7 +35,7 @@ Lucfin operates on a **3-Layer Pipeline** architecture designed to optimize late
 <p align="center">
   <img src="images/adative_architectureRAG.png" alt="Lucfin 3-Layer Architecture" width="100%">
   <br>
-  <em>Figure 1: The Adaptive Multimodal RAG Pipeline of Lucfin</em>
+  <em>Figure 2: The Adaptive Multimodal RAG Pipeline of Lucfin</em>
 </p>
 
 ---
@@ -33,6 +43,8 @@ Lucfin operates on a **3-Layer Pipeline** architecture designed to optimize late
 ## 🚀 Key Features & Demo
 
 We don't just claim it works; here is the proof of our **Backend (Uvicorn Logs)** synchronizing with the **Frontend (Android App)**.
+**Get more details in the android application repository as the link below.**
+[![Mobile](https://github.com/Phuc75nguyen/NutriAI)]
 
 ### 1. 👁️ Visual Intelligence (AI Camera)
 **Capability:** Instantly recognizes Vietnamese dishes from images and injects context into the conversation without searching the database.
