@@ -38,6 +38,20 @@ Lucfin operates on a **3-Layer Pipeline** architecture designed to optimize late
   <em>Figure 2: The Adaptive Multimodal RAG Pipeline of Lucfin</em>
 </p>
 
+
+## 🏗️ Indexing Process
+
+Lucfin uses **ChromaDB** as the Vector Database to store the documents. Besides, we use **LangChain** and **LlamaIndex** to build the index. The embedding model is **AITeamVN/Vietnamese_Embedding**.
+
+<p align="center">
+  <img src="images/indexing.png" alt="Lucfin 3-Layer Architecture" width="100%">
+  <br>
+  <em>Figure 3: The Indexing Process of Lucfin</em>
+</p>
+
+
+
+
 ---
 
 ## 🚀 Key Features & Demo
@@ -52,7 +66,7 @@ We don't just claim it works; here is the proof of our **Backend (Uvicorn Logs)*
 <p align="center">
   <img src="images/CvDetect.png" alt="Lucfin 3-Layer Architecture" width="100%">
   <br>
-  <em>Figure 1: The Adaptive Multimodal RAG Pipeline of Lucfin</em>
+  <em>Figure 4: Visual Intelligence (AI Camera)</em>
 </p>
 
 ### 2. 🧠 Deep Nutrition Knowledge (RAG)
@@ -61,7 +75,7 @@ We don't just claim it works; here is the proof of our **Backend (Uvicorn Logs)*
 <p align="center">
   <img src="images/deepRAG.png" alt="Lucfin 3-Layer Architecture" width="100%">
   <br>
-  <em>Figure 1: The Adaptive Multimodal RAG Pipeline of Lucfin</em>
+  <em>Figure 5: Deep Nutrition Knowledge (RAG)</em>
 </p>
 
 ### 3. 💬 Smart Routing & Chitchat: case1: check_gaurdrail
@@ -70,7 +84,7 @@ We don't just claim it works; here is the proof of our **Backend (Uvicorn Logs)*
 <p align="center">
   <img src="images/trungKL.png" alt="Lucfin 3-Layer Architecture" width="100%">
   <br>
-  <em>Figure 1: The Adaptive Multimodal RAG Pipeline of Lucfin</em>
+  <em>Figure 6: Smart Routing & Chitchat: case1: check_gaurdrail</em>
 </p>
 
 ---
@@ -80,7 +94,7 @@ We don't just claim it works; here is the proof of our **Backend (Uvicorn Logs)*
 <p align="center">
   <img src="images/weather.png" alt="Lucfin 3-Layer Architecture" width="100%">
   <br>
-  <em>Figure 1: The Adaptive Multimodal RAG Pipeline of Lucfin</em>
+  <em>Figure 7: Smart Routing & Chitchat: case2: check_unreliable_content_weather</em>
 </p>
 
 ---
@@ -90,7 +104,7 @@ We don't just claim it works; here is the proof of our **Backend (Uvicorn Logs)*
 <p align="center">
   <img src="images/chaohoi.png" alt="Lucfin 3-Layer Architecture" width="100%">
   <br>
-  <em>Figure 1: The Adaptive Multimodal RAG Pipeline of Lucfin</em>
+  <em>Figure 8: Smart Routing & Chitchat: case3: check_normal_speaking</em>
 </p>
 
 ---
@@ -106,7 +120,7 @@ We don't just claim it works; here is the proof of our **Backend (Uvicorn Logs)*
     * **Orchestration:** LangChain & LlamaIndex.
     * **Re-ranking:** Cross-Encoder for Context Precision.
 * **Backend:** FastAPI (Python), Uvicorn.
-* **Client:** Native Android (Java/Kotlin).
+* **Client:** Native Android (Java/XML)
 
 ---
 
